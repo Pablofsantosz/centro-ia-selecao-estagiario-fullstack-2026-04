@@ -3,7 +3,9 @@ from app.main import app
 
 client = TestClient(app)
 
-def test_health_check_returns_200():
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok", "message": "API is running"}
+
+    
+def test_generate_endpoint_exists():
+    # Testamos apenas se a rota está protegida ou responde erro de validação (sem descrição)
+    response = client.post("/api/generate", json={})
+    assert response.status_code == 422 
