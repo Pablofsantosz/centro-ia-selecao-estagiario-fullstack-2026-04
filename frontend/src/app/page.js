@@ -12,6 +12,12 @@ export default function Home() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleGenerate();
+    }
+  }
   const handleGenerate = async (e) => {
     e?.preventDefault();
     if (!description.trim() || loading) return;
@@ -21,28 +27,36 @@ export default function Home() {
     setResult("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description }),
-      });
+      
+      const [resGherkin, resCypress] = await Promise.all([
+        fetch("http://127.0.0.1:8000/api/generate/gherkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description }),
+        }),
+        fetch("http://127.0.0.1:8000/api/generate/cypress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description }),
+        })
+      ]);
 
-      const data = await response.json();
+      const dataGherkin = await resGherkin.json();
+      const dataCypress = await resCypress.json();
 
-      if (response.ok) {
-        setResult(data.data);
+      if (resGherkin.ok && resCypress.ok) {
+        
+        setResult({
+          gherkin: dataGherkin.data,
+          cypress: dataCypress.data
+        });
       } else {
-        setError(data.detail || "Erro inesperado");
+        setError("Erro ao gerar uma das partes dos testes.");
       }
     } catch (err) {
-      setError("Erro de conexão");
+      setError("Erro de conexão com o servidor.");
     } finally {
       setLoading(false);
-    }
-  };
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      handleGenerate();
     }
   };
 

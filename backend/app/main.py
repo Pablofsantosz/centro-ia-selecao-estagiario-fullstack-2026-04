@@ -6,6 +6,7 @@ from groq import Groq
 from dotenv import load_dotenv
 from app.services.strategies import CypressStrategy
 
+
 load_dotenv()
 
 
@@ -24,40 +25,77 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class UserStoryRequest(BaseModel):
     description: str
 
-@app.post("/api/generate")
-async def generate_test(request: UserStoryRequest):
-    strategy = CypressStrategy()
-    
+@app.post("/api/generate/gherkin")
+async def generate_gherkin(request: UserStoryRequest):
+    """
+    Endpoint dedicado a gerar apenas os cenários BDD em formato Gherkin.
+    """
     prompt = f"""
-    És um Engenheiro de QA Sênior especialista em testes automatizados. 
+    És um Engenheiro de QA Sênior especialista em testes BDD.
+
+    Com base na seguinte funcionalidade:
+    \"\"\"{request.description}\"\"\"
+
+    Regras obrigatórias:
+    - Usa Gherkin em português (Dado, Quando, Então)
+    - Cria EXATAMENTE 5 cenários
+    - Inclui:
+    • 2 cenários positivos
+    • 2 cenários negativos (erros, validações)
+    • 1 cenário de edge case
+    - Usa linguagem clara e profissional
+    - Evita redundância
+    - NÃO inventes funcionalidades que não existem
+
+    Formato obrigatório:
+
+    Feature: <nome da funcionalidade>
+
+    Scenario: <nome>
+        Dado ...
+        Quando ...
+        Então ...
+
+    Responde apenas com o Gherkin, sem explicações.
+    """
+    try:
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.3
+        )
+        return {"data": response.choices[0].message.content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar Gherkin: {str(e)}")
+
+@app.post("/api/generate/cypress")
+async def generate_cypress(request: UserStoryRequest):
+    """
+    Endpoint dedicado a gerar apenas o código de automação Cypress.
+    """
+    strategy = CypressStrategy()
+    prompt = f"""
+    És um Engenheiro de QA Sênior. 
     {strategy.get_prompt_instructions()}
     
-    Para a seguinte funcionalidade: {request.description}
-    
-    Tarefas:
-    1. Cria exatamente 5 cenários de teste BDD utilizando a sintaxe Gherkin estrita (Funcionalidade, Cenário, Dado, Quando, Então).
-    2. Escreve o código de automação correspondente em Cypress para cobrir estes 5 cenários.
-    
-    Regra: Responde APENAS com os cenários Gherkin e o código de teste. Formata tudo de forma limpa em Markdown.
+    Cria o código de automação Cypress para os testes de: {request.description}.
+    Baseia-te em 5 cenários de teste.
+    Responde apenas com o código, sem explicações ou blocos de Markdown.
     """
-    
     try:
-        
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            model="llama-3.1-8b-instant", 
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.3
         )
-        
-        resultado = chat_completion.choices[0].message.content
-        return {"data": resultado}
-        
+        return {"data": response.choices[0].message.content}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar Cypress: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
