@@ -1,79 +1,103 @@
 "use client";
 import { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import GenerateForm from "../components/GenerateForm";
+import CodeResult from "../components/CodeResult";
 
 export default function Home() {
   const [description, setDescription] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const handleGenerate = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    if (!description.trim() || loading) return;
+
     setLoading(true);
+    setError("");
     setResult("");
 
     try {
       const response = await fetch("http://127.0.0.1:8000/api/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description }),
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setResult(data.data);
       } else {
-        setResult("Erro ao gerar testes: " + (data.detail || "Erro desconhecido"));
+        setError(data.detail || "Erro inesperado");
       }
-    } catch (error) {
-      setResult("Erro de conexão. Verifique se o back-end está rodando.");
+    } catch (err) {
+      setError("Erro de conexão");
     } finally {
       setLoading(false);
     }
   };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleGenerate();
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(result).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <main className="min-h-screen p-8 bg-gray-50 text-gray-900">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+      
+      
+      <Sidebar />
+
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
         
-        <header className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-blue-600">QA Assistant AI</h1>
-          <p className="text-gray-600">Gerador automático de cenários BDD e automação em Cypress</p>
-        </header>
+        <Header />
 
-        <form onSubmit={handleGenerate} className="space-y-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <label className="block text-sm font-medium text-gray-700">
-            Descreva a Funcionalidade (User Story):
-          </label>
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-            rows="4"
-            placeholder="Ex: Como usuário, quero poder redefinir minha senha..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-          >
-            {loading ? "Aguarde..." : "Gerar Cenários e Automação"}
-          </button>
-        </form>
+        <div className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="max-w-4xl mx-auto space-y-6">
+            
+            
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Automação com IA</h2>
+              <p className="text-slate-500 mt-1">Transforme requisitos em testes Cypress e cenários BDD em segundos.</p>
+            </div>
 
-        {result && (
-          <div className="bg-gray-900 text-gray-100 p-6 rounded-lg shadow-md overflow-auto border border-gray-700">
-            <h2 className="text-xl font-semibold mb-4 text-blue-400">Resultado Gerado:</h2>
-            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
-              {result}
-            </pre>
+            
+            <GenerateForm 
+              description={description}
+              setDescription={setDescription}
+              handleGenerate={handleGenerate}
+              handleKeyDown={handleKeyDown}
+              loading={loading}
+            />
+
+            
+            {error && (
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-sm animate-in fade-in slide-in-from-bottom-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {error}
+              </div>
+            )}
+
+            
+            <CodeResult 
+              result={result}
+              handleCopy={handleCopy}
+              copied={copied}
+            />
+
           </div>
-        )}
-
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }
