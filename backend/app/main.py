@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from groq import Groq
 from dotenv import load_dotenv
 from app.services.strategies import CypressStrategy
+from datetime import datetime
 
 
 load_dotenv()
