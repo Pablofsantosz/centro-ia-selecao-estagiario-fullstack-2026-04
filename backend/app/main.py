@@ -32,9 +32,16 @@ async def generate_test(request: UserStoryRequest):
     strategy = CypressStrategy()
     
     prompt = f"""
-    És um QA Sênior. {strategy.get_prompt_instructions()}
-    Cria 3 cenários BDD e o código de teste para: {request.description}
-    Responde apenas com os cenários e o código, formatado em Markdown.
+    És um Engenheiro de QA Sênior especialista em testes automatizados. 
+    {strategy.get_prompt_instructions()}
+    
+    Para a seguinte funcionalidade: {request.description}
+    
+    Tarefas:
+    1. Cria exatamente 5 cenários de teste BDD utilizando a sintaxe Gherkin estrita (Funcionalidade, Cenário, Dado, Quando, Então).
+    2. Escreve o código de automação correspondente em Cypress para cobrir estes 5 cenários.
+    
+    Regra: Responde APENAS com os cenários Gherkin e o código de teste. Formata tudo de forma limpa em Markdown.
     """
     
     try:
