@@ -1,6 +1,6 @@
-import os
 
-content = """# 🚀 QA Assistant: Documentação Técnica
+
+
 
 Este projeto é um **MVP (Minimum Viable Product)** desenvolvido para o desafio técnico de seleção de estágio FullStack do Centro de IA da UNICAP (04/2026). A aplicação utiliza Inteligência Artificial para automatizar a ponte entre requisitos de negócio e testes de software.
 
@@ -35,13 +35,13 @@ Um Analista de QA recebe uma nova tarefa, por exemplo: *"Criar testes para a fun
 ## 6. Arquitetura Geral da Solução
 A solução segue uma arquitetura **Fullstack Monorepo** com separação clara de responsabilidades:
 
-### 🎨 Frontend (Next.js)
+###  Frontend (Next.js)
 Atua como o "Maestro", disparando requisições paralelas para o backend via `Promise.all` para garantir que a geração do Gherkin não bloqueie a do Cypress. Gerencia o estado global da aplicação e a persistência local dos dados.
 
-### ⚙️ Backend (FastAPI)
+###  Backend (FastAPI)
 Funciona como um "Roteador" e "Orquestrador de Prompts". Implementa o **Padrão Strategy** para isolar as instruções da IA, facilitando a adição de novos frameworks (ex: Playwright) no futuro sem alterar a base do código (seguindo os princípios SOLID).
 
-### 🧠 Camada de IA (Groq Cloud)
+###  Camada de IA (Groq Cloud)
 Integração com a Groq para processamento de linguagem natural com baixíssima latência, permitindo uma experiência de uso fluida.
 
 ---
@@ -94,6 +94,3 @@ A IA foi integrada através da API da **Groq**, utilizando o modelo **Llama 3.1*
 ---
 **Pablo Felipe dos Santos** - Ciência da Computação (6º Período - UNICAP)
 """
-
-with open('DOCS.md', 'w', encoding='utf-8') as f:
-    f.write(content)
